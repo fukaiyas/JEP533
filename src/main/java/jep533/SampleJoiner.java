@@ -12,9 +12,20 @@ public class SampleJoiner implements Joiner<String, String, TransformFailedExcep
     private Throwable failed = null;
 
     @Override
+    public boolean onComplete(Subtask<String> subtask) {
+        System.out.println("タスク終了");
+        if (subtask.state() == Subtask.State.FAILED) {
+            failed = subtask.exception();
+            return true;
+        }
+        subtasks.add(subtask.get());
+        return false;
+    }
+
+    @Override
     public String result() throws TransformFailedException {
         if (failed != null) {
-            throw new TransformFailedException("変身失敗！ [" + failed.getMessage() + "]", failed);
+            throw new TransformFailedException(failed.getMessage(), failed);
         }
         return subtasks.toString();
     }
@@ -22,15 +33,5 @@ public class SampleJoiner implements Joiner<String, String, TransformFailedExcep
     @Override
     public String timeout() throws TransformFailedException {
         return "";
-    }
-
-    @Override
-    public boolean onComplete(Subtask<String> subtask) {
-        if (subtask.state() == Subtask.State.FAILED) {
-            failed = subtask.exception();
-            return true;
-        }
-        subtasks.add(subtask.get());
-        return false;
     }
 }
